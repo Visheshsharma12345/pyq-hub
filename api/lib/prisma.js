@@ -1,8 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 
-// Reuse client across hot reloads in serverless
-const globalForPrisma = globalThis;
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Prevent multiple PrismaClient instances in serverless hot reloads
+const globalForPrisma = global;
 
-module.exports = prisma;
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  });
+}
+
+module.exports = globalForPrisma.prisma;
