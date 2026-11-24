@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  faculty
+  admin
+}
+
+enum ResourceType {
+  notes
+  pyq
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  role         Role       @default(student)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  profile      Profile?
+  resources    Resource[]
+  upvotes      Upvote[]
+  bookmarks    Bookmark[]
+  flags        Flag[]
+
+  @@map("users")
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  avatarUrl       String?  @map("avatar_url")
+  bio             String?
+  phone           String?
+  department      String?
+  designation     String?   // faculty: "Associate Professor", etc.
+  employeeId      String?   @map("employee_id")  // faculty ID
+  rollNumber      String?   @map("roll_number")  // student roll no
+  semester        Int?                            // student current semester
+  batch           String?                         // student batch e.g. "2022-2026"
+  subjects        String[]  @default([])          // faculty: subjects they teach
+  qualifications  String[]  @default([])          // faculty: M.Tech, Ph.D etc.
+  githubUrl       String?   @map("github_url")
+  linkedinUrl     String?   @map("linkedin_url")
+  websiteUrl      String?   @map("website_url")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Resource {
+  id           String       @id @default(uuid())
+  title        String
+  type         ResourceType
+  semester     Int
+  subjectCode  String       @map("subject_code")
+  subjectName  String       @map("subject_name")
+  unit         Int?
+  examYear     Int?         @map("exam_year")
+  fileUrl      String       @map("file_url")
+  fileHash     String       @unique @map("file_hash")
+  upvotesCount Int          @default(0) @map("upvotes_count")
+  isVerified   Boolean      @default(false) @map("is_verified")
+  uploadedBy   String       @map("uploaded_by")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  uploader     User         @relation(fields: [uploadedBy], references: [id])
+  upvotes      Upvote[]
+  bookmarks    Bookmark[]
+  flags        Flag[]
+
+  @@map("resources")
+}
+
+model Upvote {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  resourceId  String   @map("resource_id")
+
+  user        User     @relation(fields: [userId], references: [id])
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+  @@map("upvotes")
+}
+
+model Bookmark {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  resourceId  String   @map("resource_id")
+
+  user        User     @relation(fields: [userId], references: [id])
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+  @@map("bookmarks")
+}
+
+model Flag {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  resourceId  String   @map("resource_id")
+  reason      String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id])
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@map("flags")
+}
