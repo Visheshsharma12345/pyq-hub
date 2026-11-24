@@ -1,9 +1,13 @@
 import axios from 'axios';
 
-// In production (Vercel) the API is on the same domain at /api
-// In dev, Vite proxies /api → localhost:5000
+// In Vercel Services, VITE_API_URL is injected by the binding at build time.
+// In local dev, Vite proxies /api → localhost:5000, so baseURL stays '/api'.
+const baseURL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   withCredentials: true,
 });
 
@@ -30,7 +34,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+          const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
           localStorage.setItem('accessToken', data.accessToken);
           api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
           original.headers['Authorization'] = `Bearer ${data.accessToken}`;
