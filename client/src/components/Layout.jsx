@@ -13,6 +13,8 @@ export default function Layout() {
               style={{borderColor:'rgba(255,255,255,0.05)'}}>
         © {new Date().getFullYear()} Department Study Note &amp; PYQ Hub ·{' '}
         <span className="text-gradient font-semibold">Built for college students</span>
+        {' '}· Made with <span style={{color:'#ef4444'}}>❤</span> by{' '}
+        <span className="font-semibold" style={{color:'#c4b5fd'}}>Vishesh Kumar Sharma</span>
       </footer>
     </div>
   );
